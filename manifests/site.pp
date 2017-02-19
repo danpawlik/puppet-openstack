@@ -1,3 +1,5 @@
+$release = 'ocata'
+
 include profiles::apt
 include profiles::rabbitmq
 include profiles::mysql
