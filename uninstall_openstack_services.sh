@@ -18,10 +18,8 @@ for i in oslo keystone* keystone nova cinder ceilometer neutron mysql rabbit \
     openvswitch-* openstack libvirt qemu sqlalchemy apache haproxy ceph glance \
     aodh barbican designate gnocchi heat horizon ironic mistral murano mysql \
     panko sahara swift tempest trove vitrage watcher zeqar; do
-    packages=$(dpkg -l | grep $i | awk '{print $2}')
-    for package in packages; do
-        apt-get remove --purge $package -y;
-    done
+    echo "Removing $i ..."
+    apt-get remove --purge $(dpkg -l | grep $i | awk '{print $2}') -y;
 done
 
 echo "Removing /etc/<OPENSTACK SERVICE> and related program dirs"
@@ -45,7 +43,7 @@ pip freeze > /tmp/dump_pip
 pip uninstall -r /tmp/dump_pip -y
 
 echo "Reinstalling all python packages after uninstalling pip packages (important)"
-for i in `dpkg -l | grep python | awk '{print $2}'`; do apt-get install --reinstall $i -y; done
+for i in $(dpkg -l | grep python | awk '{print $2}'); do apt-get install --reinstall $i -y; done
 
 echo "Sometimes you can have problems db sync or package installation...
 Make sure that all Openstack dirs are removed"
@@ -55,3 +53,9 @@ for i in nova neutron cinder glance keystone; do
     find / -name $i -type d | grep -v puppet | xargs rm -rf
     echo "Removed folders from Openstack $i project"
 done
+
+echo "Reinstalling important packages to avoid problems with installation
+after back installing older Openstack version (e.g. ocata to newton)"
+apt-get update
+apt-get remove python-cryptography python-webob python-pbr python-funcsigs python-requests python-urllib3 python-pyparsing -y
+apt-get install python-cryptography python-webob python-pbr python-funcsigs python-requests python-urllib3 python-pyparsing -y
