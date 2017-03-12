@@ -12,6 +12,7 @@ wget https://apt.puppetlabs.com/puppetlabs-release-pc1-xenial.deb
 dpkg -i puppetlabs-release-pc1-xenial.deb
 
 apt-get update
+apt-get dist-upgrade -y
 apt-get install puppetserver -y
 
 systemctl enable puppetserver
@@ -50,7 +51,25 @@ git clone https://github.com/dduuch/puppet-openstack.git /tmp/puppet-openstack
 cp -R /tmp/puppet-openstack/profiles  /etc/puppetlabs/code/environments/production/modules/
 cp /tmp/puppet-openstack/manifests/site.pp /etc/puppetlabs/code/environments/production/manifests/site.pp
 
+
+# Workaround with nova-common package.
+echo "Workaround with nova-common installation where connection to DB is set to sqllite.
+More info: https://bugs.launchpad.net/ubuntu/+source/nova/+bug/1671078"
+
+read -p "Do you want to use workoround fix for nova? Y/n? " -n 1 -r
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+    cp -R /tmp/puppet-openstack/workaround-nova/nova /etc/
+    echo "Fixed! :)"
+fi
+
 # Starting puppet agent
+echo "Restarting puppetserver..."
 systemctl start puppetserver
+echo "Restarting puppet..."
 systemctl start puppet
+echo "Let's go puppet!"
 /opt/puppetlabs/bin/puppet agent --test --server $(hostname).local
+echo "Probably you have some troubles with nova-manage db sync, so I run dist-upgrade"
+sleep 5
+apt-get dist-upgrade -y
