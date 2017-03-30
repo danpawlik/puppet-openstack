@@ -1,6 +1,6 @@
 class profiles::apt {
 
-  apt::source { 'cloud-archive-ocata':
+  apt::source { "cloud-archive-${release}":
     location       => "http://ppa.launchpad.net/ubuntu-cloud-archive/${release}-staging/ubuntu",
     release        => 'xenial',
     repos          => 'main',
