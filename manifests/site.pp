@@ -1,4 +1,4 @@
-$release = 'pike'
+$release = 'ocata'
 
 include profiles::apt
 include profiles::rabbitmq
