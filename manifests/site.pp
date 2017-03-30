@@ -1,4 +1,4 @@
-$release = 'pike'
+$release = 'newton'
 
 include profiles::apt
 include profiles::rabbitmq
