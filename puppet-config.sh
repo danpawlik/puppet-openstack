@@ -67,9 +67,8 @@ fi
 echo "Restarting puppetserver..."
 systemctl start puppetserver
 echo "Restarting puppet..."
-systemctl start puppet
+systemctl start puppet 
 echo "Let's go puppet!"
-/opt/puppetlabs/bin/puppet agent --test --server $(hostname).local
-echo "Probably you have some troubles with nova-manage db sync, so I run dist-upgrade"
-sleep 5
-apt-get dist-upgrade -y
+
+puppetserver_name=$(ls /etc/puppetlabs/puppet/ssl/public_keys/ | sed s/\.pem//g)
+/opt/puppetlabs/bin/puppet agent --test --server $puppetserver_name
