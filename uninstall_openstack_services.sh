@@ -30,6 +30,14 @@ rm -rf /etc/neutron
 rm -rf /etc/apache2
 rm -rf /etc/haproxy
 
+read -p "Do you want to drop all mysql files? Y/n? " -n 1 -r
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+    find / -name 'mysql' -type d | grep -v 'puppet' | xargs rm -rf
+    echo "Removed!"
+fi
+
+
 echo "Removing openrc file. It's important when you make some changes and
 you don't know how it should look like :) "
 

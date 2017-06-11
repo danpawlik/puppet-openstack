@@ -1,16 +1,18 @@
-$release = 'pike'
+$release = 'ocata'
 
-include profiles::apt
-include profiles::rabbitmq
-include profiles::mysql
+class{'profiles::apt': }
+class{'profiles::rabbitmq': }
+class{'profiles::mysql': }
 
-include openstack_integration::keystone
-include openstack_integration::nova
-include openstack_integration::neutron
-include openstack_integration::cinder
-include openstack_integration::glance
+Apt::Source["cloud-archive-${release}"] -> Package<||>
 
-include profiles::nova
-include profiles::neutron
-include profiles::cinder
-include profiles::glance
+class{'openstack_integration::keystone':  }  
+class{'openstack_integration::nova':      } 
+class{'openstack_integration::neutron':   } 
+class{'openstack_integration::cinder':    } 
+class{'openstack_integration::glance':    } 
+
+class{'profiles::nova': }
+class{'profiles::neutron': }
+class{'profiles::cinder': }
+class{'profiles::glance': }

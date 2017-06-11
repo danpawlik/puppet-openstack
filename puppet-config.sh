@@ -1,13 +1,21 @@
 #!/bin/bash
 
+CLOUD_ARCHIVE_REPO='ocata'
 BRANCH='stable/ocata'
 
 echo "This script is installing all services on one host"
+echo "Puppet will be deployed with branch: $BRANCH. If you want to change, stop the script"
+for i in {10..1}; do
+    echo -ne "$i..\n" && sleep 1;
+done
+echo "Configured branch: $BRANCH"
 
 # Add your host into /etc/hosts.
 echo "$(hostname -I | awk '{print $1}')  $(hostname) $(hostname).local" >> /etc/hosts
 
 # Download and install puppet-4
+apt-get update
+apt-get install wget git -y
 wget https://apt.puppetlabs.com/puppetlabs-release-pc1-xenial.deb
 dpkg -i puppetlabs-release-pc1-xenial.deb
 
@@ -49,8 +57,7 @@ git clone https://github.com/puppetlabs/puppetlabs-inifile.git /etc/puppetlabs/c
 # Copy profile module
 git clone https://github.com/dduuch/puppet-openstack.git /tmp/puppet-openstack
 cp -R /tmp/puppet-openstack/profiles  /etc/puppetlabs/code/environments/production/modules/
-cp /tmp/puppet-openstack/manifests/site.pp /etc/puppetlabs/code/environments/production/manifests/site.pp
-
+sed s/ocata/$CLOUD_ARCHIVE_REPO/g /tmp/puppet-openstack/manifests/site.pp > /etc/puppetlabs/code/environments/production/manifests/site.pp
 
 # Workaround with nova-common package.
 echo "Workaround with nova-common installation where connection to DB is set to sqllite.
