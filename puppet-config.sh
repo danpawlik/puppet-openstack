@@ -1,7 +1,7 @@
 #!/bin/bash
 
-CLOUD_ARCHIVE_REPO='ocata'
-BRANCH='stable/ocata'
+CLOUD_ARCHIVE_REPO='queens'
+BRANCH='stable/queens'
 
 echo "This script is installing all services on one host"
 echo "Puppet will be deployed with branch: $BRANCH. If you want to change, stop the script"
@@ -16,18 +16,35 @@ echo "$(hostname -I | awk '{print $1}')  $(hostname) $(hostname).local" >> /etc/
 # Download and install puppet-4
 apt-get update
 apt-get install wget git -y
-wget https://apt.puppetlabs.com/puppetlabs-release-pc1-xenial.deb
-dpkg -i puppetlabs-release-pc1-xenial.deb
+wget https://apt.puppetlabs.com/puppet5-release-xenial.deb
+sudo dpkg -i puppet5-release-xenial.deb
 
 apt-get update
-apt-get dist-upgrade -y
-apt-get install puppetserver -y
+sudo apt-get dist-upgrade -y
+sudo apt-get install puppetserver -y
 
-systemctl enable puppetserver
-systemctl stop puppetserver
+hostname=$(hostname)
+cat <<EOF >/etc/puppetlabs/puppet/puppet.conf
+[main]
+certname = $hostname
+server = $hostname
+environment = production
+strict_variables = true
 
-systemctl enable puppet
-systemctl stop puppet
+[master]
+environment = production
+EOF
+#puppet master --genconfig > /etc/puppetlabs/puppet/puppet.conf
+#puppet resource package puppetdb ensure=latest
+#puppet resource service puppetdb ensure=running enable=true
+
+export PATH=$PATH:/opt/puppetlabs/bin
+echo "export PATH=$PATH:/opt/puppetlabs/bin" >> ~/.bashrc
+
+sudo systemctl enable puppetserver
+sudo systemctl stop puppetserver
+sudo systemctl enable puppet
+sudo systemctl stop puppet
 
 # Clone Puppet Openstack modules
 git clone https://github.com/openstack/puppet-openstack-integration.git -b $BRANCH /etc/puppetlabs/code/environments/production/modules/openstack_integration
@@ -39,6 +56,7 @@ git clone https://github.com/openstack/puppet-neutron -b $BRANCH /etc/puppetlabs
 git clone https://github.com/openstack/puppet-keystone.git -b $BRANCH /etc/puppetlabs/code/environments/production/modules/keystone
 git clone https://github.com/openstack/puppet-cinder.git -b $BRANCH /etc/puppetlabs/code/environments/production/modules/cinder
 git clone https://github.com/openstack/puppet-glance.git -b $BRANCH /etc/puppetlabs/code/environments/production/modules/glance
+git clone https://github.com/openstack/puppet-ironic.git -b $BRANCH /etc/puppetlabs/code/environments/production/modules/ironic
 
 # Clone required modules for Puppet Openstack
 git clone https://github.com/puppetlabs/puppetlabs-rabbitmq.git /etc/puppetlabs/code/environments/production/modules/rabbitmq
@@ -53,6 +71,7 @@ git clone https://github.com/puppetlabs/puppetlabs-apt.git /etc/puppetlabs/code/
 git clone https://github.com/voxpupuli/puppet-staging.git /etc/puppetlabs/code/environments/production/modules/staging
 git clone https://github.com/puppetlabs/puppetlabs-vswitch.git /etc/puppetlabs/code/environments/production/modules/vswitch
 git clone https://github.com/puppetlabs/puppetlabs-inifile.git /etc/puppetlabs/code/environments/production/modules/inifile
+git clone https://github.com/voxpupuli/puppet-archive /etc/puppetlabs/code/environments/production/modules/archive
 
 # Copy profile module
 git clone https://github.com/dduuch/puppet-openstack.git /tmp/puppet-openstack
@@ -72,9 +91,9 @@ fi
 
 # Starting puppet agent
 echo "Restarting puppetserver..."
-systemctl start puppetserver
+sudo systemctl restart puppetserver
 echo "Restarting puppet..."
-systemctl start puppet 
+sudo systemctl restart puppet
 echo "Let's go puppet!"
 
 puppetserver_name=$(ls /etc/puppetlabs/puppet/ssl/public_keys/ | sed s/\.pem//g)
